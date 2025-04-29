@@ -12,4 +12,4 @@ export const imageLoadedSignal = signal(false);
 export const canvasWidthSignal = signal(800);
 export const canvasHeightSignal = signal(600);
 export const smoothPosition = signal<{ col: number, row: number }>({ col: 0, row: 0 });
-export const currentGridKey = signal<string | null>("3,0")
+export const currentGridKey = signal<string | null>(null)
