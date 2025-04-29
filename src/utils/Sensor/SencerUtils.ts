@@ -1,6 +1,6 @@
 import { mean, std } from "mathjs";
-import { gridSizeSignal, selectedCell } from "../../store/visualCanvasStore";
-import { accelerometerSignal, allMagneticFingerPrint, forwardHeadingForCell, gyroscopeDiviceAngle,  interpolatedPosition, orientationSignal, pdrPosition, realTimeAvgMagData, stepCount, trackingMode } from "../../store/nativeMessageStore";
+import { currentGridKey, gridSizeSignal, selectedCell } from "../../store/visualCanvasStore";
+import { accelerometerSignal, allMagneticFingerPrint,  forwardHeadingForCell, gyroscopeDiviceAngle,  interpolatedPosition, orientationSignal, pdrPosition, realTimeAvgMagData, stepCount, trackingMode } from "../../store/nativeMessageStore";
 
 
 export const getCompassHeading = (yaw: number) => {
@@ -140,7 +140,7 @@ export function updatePDR(acc: { x: number; y: number; z: number }, orientation:
 
 
 
-let currentGridKey = "3,0";
+
 let stepCounter = 0;
 const STEP_THRESHOLD = 3;
 let lastStepTimePDR = 0
@@ -150,22 +150,30 @@ const stepHeadingHistory: number[] = []; // heading collection
 
 export function updateSmoothPDR() {
   const acc = accelerometerSignal.value;
+  console.log('acc: ', acc);
   const orientation = orientationSignal.value;
   if (!trackingMode.value) return;
+  if(!currentGridKey.value) {
+    alert("plz select your current position")
+    trackingMode.value=false
+    return
+  }
 
   const accMag = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+  // console.log('accMag: ', accMag);
   const now = Date.now();
   const delta = Math.abs(accMag - 9.8);
 
   const currentYawDeg = (orientation.yaw * 180) / Math.PI;
   const currentYawNormalized = ((currentYawDeg % 360) + 360) % 360;
 
+  // console.log('delta: ', delta,accMag);
   if (delta > 1 && now - lastStepTimePDR > 500) {
     lastStepTimePDR = now;
 
-    const expectedForwardAngle = forwardHeadingForCell.value?.[currentGridKey]?.forwardAngle;
+    const expectedForwardAngle = forwardHeadingForCell.value?.[currentGridKey.value]?.forwardAngle;
     if (expectedForwardAngle == null) {
-      console.log("🛑 No forward angle available for current grid:", currentGridKey);
+      console.log("🛑 No forward angle available for current grid:", currentGridKey.value);
       return;
     }
 
@@ -186,9 +194,9 @@ export function updateSmoothPDR() {
     console.log(`✅ Step accepted. StepCounter: ${stepCounter}`);
 
     // ✅ Update interpolatedPosition
-    const from = currentGridKey;
+    const from = currentGridKey.value;
     const to = Object.entries(forwardHeadingForCell.value || {}).find(
-      ([_key, val]) => val.previouskey === currentGridKey
+      ([_key, val]) => val.previouskey === currentGridKey.value
     )?.[0];
 
     if (to) {
@@ -206,12 +214,12 @@ export function updateSmoothPDR() {
     // ✅ After STEP_THRESHOLD steps, move to next grid
     if (stepCounter >= STEP_THRESHOLD) {
       const nextGrid = Object.entries(forwardHeadingForCell.value || {}).find(
-        ([_key, val]) => val.previouskey === currentGridKey
+        ([_key, val]) => val.previouskey === currentGridKey.value
       )?.[0];
 
       if (nextGrid) {
         console.log(`✅ Moving to next grid: ${nextGrid}`);
-        currentGridKey = nextGrid;
+        currentGridKey.value = nextGrid;
       } else {
         console.log("🛑 No next grid available even after correct steps.");
       }
@@ -228,7 +236,11 @@ export function updateSmoothPDR$Nice() {
   const acc = accelerometerSignal.value;
   const orientation = orientationSignal.value;
   if (!trackingMode.value) return;
-
+  if(!currentGridKey.value) {
+    alert("plz select your current position")
+    trackingMode.value=false
+    return
+  }
   const accMag = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
   const now = Date.now();
   const delta = Math.abs(accMag - 9.8);
@@ -239,7 +251,7 @@ export function updateSmoothPDR$Nice() {
     lastStepTimePDR = now;
 
     // ✅ Step 1: Check current heading
-    const expectedForwardAngle = forwardHeadingForCell.value?.[currentGridKey]?.forwardAngle;
+    const expectedForwardAngle = forwardHeadingForCell.value?.[currentGridKey.value]?.forwardAngle;
     if (expectedForwardAngle == null) return;
 
     let headingDifference = Math.abs(currentYawDeg - expectedForwardAngle);
@@ -255,9 +267,9 @@ export function updateSmoothPDR$Nice() {
     stepCounter++;
     console.log(`✅ Step accepted. Step counter = ${stepCounter}`);
 
-    const from = currentGridKey;
+    const from = currentGridKey.value;
     const to = Object.entries(forwardHeadingForCell.value || {}).find(
-      ([_key, val]) => val.previouskey === currentGridKey
+      ([_key, val]) => val.previouskey === currentGridKey.value
     )?.[0];
 
     if (!to) return;
@@ -275,7 +287,7 @@ export function updateSmoothPDR$Nice() {
     if (stepCounter >= STEP_THRESHOLD) {
       console.log(`🚶‍♂️ Moving to next grid: ${to}`);
       stepCounter = 0;
-      currentGridKey = to;
+      currentGridKey.value = to;
     }
   }
 }
@@ -290,7 +302,11 @@ export function updateSmoothPDRold() {
   // const orientation = orientationSignal.value;
   // console.log('orientation: ', orientation);
   if (!trackingMode.value) return
-
+  if(!currentGridKey.value) {
+    alert("plz select your current position")
+    trackingMode.value=false
+    return
+  }
   const accMag = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
   const now = Date.now();
   const delta = Math.abs(accMag - 9.8);
@@ -306,9 +322,9 @@ export function updateSmoothPDRold() {
     stepCounter++;
     // console.log('stepCounter: ', orientation);
 
-    const from = currentGridKey;
+    const from = currentGridKey.value;
     const to = Object.entries(forwardHeadingForCell.value || {}).find(
-      ([_key, val]) => val.previouskey === currentGridKey
+      ([_key, val]) => val.previouskey === currentGridKey.value
     )?.[0];
 
     if (!to) return;
@@ -328,7 +344,7 @@ export function updateSmoothPDRold() {
     };
     if (stepCounter >= STEP_THRESHOLD) {
       stepCounter = 0;
-      currentGridKey = to;
+      currentGridKey.value = to;
     }
   }
 

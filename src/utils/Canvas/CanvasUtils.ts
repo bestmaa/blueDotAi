@@ -1,16 +1,22 @@
-import { canvasHeightSignal, canvasOnClickMousePosition, canvasRefSignal, canvasWidthSignal, selectedCell, gridSizeSignal, imageObjectSignal, collectData, smoothPosition } from "../../store/visualCanvasStore";
+import { canvasHeightSignal, canvasOnClickMousePosition, canvasRefSignal, canvasWidthSignal, selectedCell, gridSizeSignal, imageObjectSignal, collectData, smoothPosition, currentGridKey } from "../../store/visualCanvasStore";
 import floorImage from '../../assets/floor.jpg';
 import { allMagneticFingerPrint, ForwardHeadingMap, interpolatedPosition, pdrPosition, trackingIndex, trackingMode, trackingPath } from "../../store/nativeMessageStore";
 import { totalSections } from "../../store/constant";
-export function ClickOnCanvas(e: MouseEvent): { x: number; y: number } | null {
+import { gridName } from "../Sensor/SencerUtils";
+export function ClickOnCanvas(e: MouseEvent): { x: number; y: number, col: number, row: number } | null {
     if (collectData.value) return null
     const canvas = canvasRefSignal.value;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    canvasOnClickMousePosition.value = { x, y }
-    return { x, y };
+    const gridSize = gridSizeSignal.value;
+    const col = Math.floor(x / gridSize);
+    const row = Math.floor(y / gridSize);
+    canvasOnClickMousePosition.value = { x, y, col, row }
+    selectedCell.value = { row, col }
+    currentGridKey.value = gridName()
+    return { x, y, col, row };
 }
 
 export function canvasClear() {
@@ -74,11 +80,9 @@ export function ClickHighlightGridCell(color = 'rgba(255, 0, 0, 0.3)') {
     if (!pos) return;
 
     const gridSize = gridSizeSignal.value;
-    const col = Math.floor(pos.x / gridSize);
-    const row = Math.floor(pos.y / gridSize);
-    selectedCell.value = { row, col }
+
     ctx.fillStyle = color;
-    ctx.fillRect(col * gridSize, row * gridSize, gridSize, gridSize);
+    ctx.fillRect(pos.col * gridSize, pos.row * gridSize, gridSize, gridSize);
 }
 
 export function drawGridCollectionPercentage() {
@@ -280,7 +284,7 @@ export function drawPDRPathFromDirectionMap(directionMap: ForwardHeadingMap) {
         const y1 = row1 * gridSize + gridSize / 2;
         const x2 = col2 * gridSize + gridSize / 2;
         const y2 = row2 * gridSize + gridSize / 2;
-        
+
         // Draw path line
         ctx.beginPath();
         ctx.moveTo(x1, y1);

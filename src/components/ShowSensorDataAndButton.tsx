@@ -1,7 +1,7 @@
 import { computed } from '@preact/signals-react'
 import { accelerometerSignal, forwardHeadingForCell, gyroscopeSignal, magneticFingerPrint, magnetometerSignal, orientationSignal, trackingMode } from '../store/nativeMessageStore';
 import { getCompassHeading, gridName, sendWebtoNetive, trackGyroRotation } from '../utils/Sensor/SencerUtils';
-import { collectData, directionDataCollectionStatus } from '../store/visualCanvasStore';
+import { collectData, currentGridKey, directionDataCollectionStatus, selectedCell } from '../store/visualCanvasStore';
 import { clearLocalstorage, saveDirectionData, saveMagneticFingerprintToLocalStorage } from '../store/localStore';
 
 let Display = computed(() => {
@@ -12,7 +12,7 @@ let Display = computed(() => {
     trackGyroRotation(gyro)
     // console.log('ori: ', ori);
     // console.log(gyro.z.toFixed(2));
-    
+
     let compassHeading = getCompassHeading(ori.yaw);
     const pitchDeg = (ori.pitch * 180) / Math.PI;
     const rollDeg = ori.roll * (180 / Math.PI);
@@ -94,6 +94,7 @@ const directionDataCollectionStatusBtn = computed(() => {
     const toggleCollecting = () => {
 
         directionDataCollectionStatus.value = !directionDataCollectionStatus.value;
+        currentGridKey.value=null
         saveDirectionData(forwardHeadingForCell.value)
         sendWebtoNetive(forwardHeadingForCell.value)
     };
@@ -140,7 +141,7 @@ function ShowSensorDataAndButton() {
     return (
         <div className="p-6 bg-white rounded-xl shadow-md max-w-lg mx-auto space-y-6 border border-gray-200">
             <h2 className=" font-bold text-center text-gray-700 flex items-center justify-center gap-2">
-                Real-time Sensor Monitor  <b onClick={()=>{
+                Real-time Sensor Monitor  <b onClick={() => {
                     window.location.reload()
                 }}>🔄 Restart</b>
             </h2>
