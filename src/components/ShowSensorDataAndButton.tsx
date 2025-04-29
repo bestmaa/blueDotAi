@@ -1,7 +1,7 @@
 import { computed } from '@preact/signals-react'
 import { accelerometerSignal, forwardHeadingForCell, gyroscopeSignal, magneticFingerPrint, magnetometerSignal, orientationSignal, trackingMode } from '../store/nativeMessageStore';
 import { getCompassHeading, gridName, sendWebtoNetive, trackGyroRotation } from '../utils/Sensor/SencerUtils';
-import { collectData, currentGridKey, directionDataCollectionStatus, selectedCell } from '../store/visualCanvasStore';
+import { collectData, currentGridKey, directionDataCollectionStatus } from '../store/visualCanvasStore';
 import { clearLocalstorage, saveDirectionData, saveMagneticFingerprintToLocalStorage } from '../store/localStore';
 
 let Display = computed(() => {
