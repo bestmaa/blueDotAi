@@ -1,17 +1,19 @@
 
 
-import {  forwardHeadingForCell } from "../../store/nativeMessageStore";
+import { forwardHeadingForCell } from "../../store/nativeMessageStore";
 import { directionDataCollection, realTimeMagDataFilter, sensorDataCollection } from "../Sensor/CollectData";
-import {  findNearestGrid, getWeightedGridPosition, updateSmoothPDR } from "../Sensor/SencerUtils";
-import { applyLowPassFilter, canvasClear, ClickHighlightGridCell, drawGridCollectionPercentage, DrawGridOnCanvas,  drawPDRPathFromDirectionMap,   drawSmoothPDRDot, drawTop5NearestGridsOnCanvas } from "./CanvasUtils";
+import { findNearestGrid, getWeightedGridPosition, updateSmoothPDR } from "../Sensor/SencerUtils";
+import { sendData } from "../severData/severDatafn";
+import { applyLowPassFilter, canvasClear, ClickHighlightGridCell, drawGridCollectionPercentage, DrawGridOnCanvas, drawPDRPathFromDirectionMap, drawSmoothPDRDot, drawTop5NearestGridsOnCanvas } from "./CanvasUtils";
 
 
-
+let lastSendTime = 0;
 let animationId: number;
 export function Draw() {
     let clear = canvasClear()
     if (!clear) return
     // DrawImageOnCanvas()
+    
     DrawGridOnCanvas()
     ClickHighlightGridCell()
     sensorDataCollection()

@@ -1,6 +1,7 @@
 import { mean, std } from "mathjs";
 import { currentGridKey, gridSizeSignal, selectedCell } from "../../store/visualCanvasStore";
 import { accelerometerSignal, allMagneticFingerPrint,  forwardHeadingForCell, gyroscopeDiviceAngle,  interpolatedPosition, orientationSignal, pdrPosition, realTimeAvgMagData, stepCount, trackingMode } from "../../store/nativeMessageStore";
+import { sendData } from "../severData/severDatafn";
 
 
 export const getCompassHeading = (yaw: number) => {
@@ -138,7 +139,7 @@ export function updatePDR(acc: { x: number; y: number; z: number }, orientation:
 }
 
 
-
+// code chenge hear 
 
 
 let stepCounter = 0;
@@ -150,7 +151,7 @@ const stepHeadingHistory: number[] = []; // heading collection
 
 export function updateSmoothPDR() {
   const acc = accelerometerSignal.value;
-  console.log('acc: ', acc);
+  // console.log('acc: ', acc);
   const orientation = orientationSignal.value;
   if (!trackingMode.value) return;
   if(!currentGridKey.value) {
@@ -165,11 +166,12 @@ export function updateSmoothPDR() {
   const delta = Math.abs(accMag - 9.8);
 
   const currentYawDeg = (orientation.yaw * 180) / Math.PI;
-  const currentYawNormalized = ((currentYawDeg % 360) + 360) % 360;
+  const currentYawNormalized = ((currentYawDeg % 360) + 360) % 360;  // 0 to 359 ke bich 
 
   // console.log('delta: ', delta,accMag);
   if (delta > 1 && now - lastStepTimePDR > 500) {
     lastStepTimePDR = now;
+    sendData(currentYawNormalized)
 
     const expectedForwardAngle = forwardHeadingForCell.value?.[currentGridKey.value]?.forwardAngle;
     if (expectedForwardAngle == null) {
@@ -231,6 +233,7 @@ export function updateSmoothPDR() {
   }
 }
 
+// code end
 
 export function updateSmoothPDR$Nice() {
   const acc = accelerometerSignal.value;
@@ -290,65 +293,6 @@ export function updateSmoothPDR$Nice() {
       currentGridKey.value = to;
     }
   }
-}
-
-
-
-
-
-
-export function updateSmoothPDRold() {
-  const acc = accelerometerSignal.value;
-  // const orientation = orientationSignal.value;
-  // console.log('orientation: ', orientation);
-  if (!trackingMode.value) return
-  if(!currentGridKey.value) {
-    alert("plz select your current position")
-    trackingMode.value=false
-    return
-  }
-  const accMag = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
-  const now = Date.now();
-  const delta = Math.abs(accMag - 9.8);
-  // ✅ yaw बदलने का डिफरेंस
-  // console.log('delta: ', now - lastStepTimePDR);
-  // if (yawDiff > yawChangeThreshold && delta < 2) {
-  //   console.log("🛑 सिर्फ घूम रहा है – step skip");
-  //   return;
-  // }
-  if (delta > 1 && now - lastStepTimePDR > 500) {
-    console.log('delta: ', delta);
-    lastStepTimePDR = now;
-    stepCounter++;
-    // console.log('stepCounter: ', orientation);
-
-    const from = currentGridKey.value;
-    const to = Object.entries(forwardHeadingForCell.value || {}).find(
-      ([_key, val]) => val.previouskey === currentGridKey.value
-    )?.[0];
-
-    if (!to) return;
-
-    const [fromCol, fromRow] = from.split(",").map(Number);
-    const [toCol, toRow] = to.split(",").map(Number);
-
-    const progress = stepCounter / STEP_THRESHOLD;
-
-    // const targetPos = {
-    //   x: (fromCol + (toCol - fromCol) * progress) * gridSizeSignal.value + gridSizeSignal.value / 2,
-    //   y: (fromRow + (toRow - fromRow) * progress) * gridSizeSignal.value + gridSizeSignal.value / 2
-    // };
-    interpolatedPosition.value = {
-      x: (fromCol + (toCol - fromCol) * progress) * gridSizeSignal.value + gridSizeSignal.value / 2,
-      y: (fromRow + (toRow - fromRow) * progress) * gridSizeSignal.value + gridSizeSignal.value / 2
-    };
-    if (stepCounter >= STEP_THRESHOLD) {
-      stepCounter = 0;
-      currentGridKey.value = to;
-    }
-  }
-
-
 }
 
 let totalRotationDeg = 0; // कुल कितना घूमा है
